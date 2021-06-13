@@ -1,5 +1,5 @@
 import { HttpContextContract } from '@ioc:Adonis/Core/HttpContext'
-import {User} from 'App/Models'
+import {User, UserKey} from 'App/Models'
 import {StoreValidator} from 'App/Validators/User/Register'
 import faker from 'faker'
 import Mail from '@ioc:Adonis/Addons/Mail'
@@ -29,12 +29,17 @@ export default class UserRegisterController {
    return response
   }
 
-  public async edit ({}: HttpContextContract) {
-  }
+  public async show ({params}: HttpContextContract) {
+    const userKey = await UserKey.findByOrFail('key', params.key)
+    const user = await userKey.related('user').query().firstOrFail()
 
-  public async update ({}: HttpContextContract) {
-  }
+    user.merge({email_validated: 1})
+    await user.save()
 
-  public async destroy ({}: HttpContextContract) {
+    return user.serialize({
+      fields:{
+        omit: ['rememberMeToken']
+      }
+    })
   }
 }
